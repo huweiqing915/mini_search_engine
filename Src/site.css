@@ -1,0 +1,46 @@
+
+*{
+    margin:0;
+    padding:0;
+}
+    
+body {  
+    font-family:"yaHei Consolas Hybrid";  
+    margin:0;  
+}  
+   
+.searchBlock {  
+    width:678px;  
+    position:relative;  
+    margin:50px auto;  
+}  
+
+.searchBlock input {  
+    font-size:20px;  
+}  
+   
+.textShape {  
+    width:578px;  
+    height:28px;  
+    border:1px solid #ddd;  
+    padding:10px;  
+}  
+   
+.buttonShape {  
+    border:0;  
+    width:100px;  
+    height:50px;  
+    background-color:#98bf21;  
+    color:#fff;  
+    text-align:center;  
+    cursor:pointer;  
+    position:absolute; 
+}  
+
+#showtime {
+    text-align: center;
+    margin: 0 auto;
+}
+   
+  
+

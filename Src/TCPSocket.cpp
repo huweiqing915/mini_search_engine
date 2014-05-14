@@ -90,27 +90,29 @@ void TCPSocket::tcp_connect()
 int TCPSocket::send_message(void *buf, size_t len)
 {
 	int iret = send(_sock_fd, buf, len, 0);
-	cout << "Recv message: " << (char*)buf << endl;
+	cout << "Send message: " << (char*)buf << endl;
 	return iret;
 }
 int TCPSocket::send_message(int fd, void *buf, size_t len)
 {
 	int iret = send(fd, buf, len, 0);
-	cout << "Recv message: " << (char*)buf << endl;
+	cout << "Send message: " << (char*)buf << endl;
 	return iret;
 }
 
 int TCPSocket::recv_message(void *buf, size_t len)
 {
 	int iret = recv(_sock_fd, buf, len, 0);
-	cout << "Send message: " << (char*)buf << endl;
+	cout << "Recv message: " << (char*)buf << endl;
+	LogInfo("Recieve from client : %s" (char*)buf);
 	return iret;
 }
 
 int TCPSocket::recv_message(int fd, void *buf, size_t len)
 {
 	int iret = recv(fd, buf, len, 0);
-	cout << "Send message: " << (char*)buf << endl;
+	cout << "Recv message: " << (char*)buf << endl;
+	LogInfo("Recieve from client : %s" (char*)buf);
 	return iret;
 }
 

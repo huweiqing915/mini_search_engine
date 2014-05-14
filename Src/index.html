@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+
+<html xmlns="http://www.w3.org/1999/xhtml">  
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  
+	<title>MiniSearchEngine</title>
+<link rel="stylesheet" type="text/css" href="./site.css">
+
+<script src="http://code.jquery.com/jquery-1.9.1.min.js"> </script>
+
+<script type="text/javascript">
+	$(document).ready(function()
+	{
+		$("#searchButton").click(function(){
+			var searchWords = $("#searchContent").val();
+			$.post("client_tcp.php", {search_content:searchWords}, function(data, status){
+				if (status == "success") 
+				{
+					var obj = eval("(" + data + ")"); 
+					$("#result").html("");
+					$.each(obj.files, function(i, item) {
+                    $("#result").append(
+                    	//将遍历到的数据显示在id为result这个div里面
+                        //根据json对象的每一个子集的键显示相应的值，这是json的语法
+                        "<div>" + item.title  + "</div>" +
+                        "<div>" + item.summary+ "</div><hr/>");
+               		});
+				}
+				else
+				{
+					alert("error!");
+				}
+			});
+		});
+	}); 
+
+	$(document).ready(function()
+	{
+		$(".searchBlock input").keypress(function(event) {       
+        if (event.keyCode == 13) {
+			var searchWords = $("#searchContent").val();
+			$.post("client_tcp.php", {search_content:searchWords}, function(data, status){
+				if (status == "success") 
+				{
+					var obj = eval("(" + data + ")"); 
+					$("#result").html("");
+					$.each(obj.files, function(i, item) {
+                    $("#result").append(
+                    	//将遍历到的数据显示在id为result这个div里面
+                        //根据json对象的每一个子集的键显示相应的值，这是json的语法
+                        "<div>" + item.title  + "</div>" +
+                        "<div>" + item.summary+ "</div><hr/>");
+               		});
+				}
+				else
+				{
+					alert("error!");
+				}
+			});
+		}
+		});
+	}); 
+</script>
+</head>
+
+<body>
+ 	<!-- div布局 -->
+	<div class="searchBlock">
+	<input type="text" id="searchContent" class="textShape"/>  
+    <input type="button" id="searchButton" class="buttonShape" value="Search"/>   
+        <div id="result"> 
+        </div>  <!-- 对应id="result"的结束标签  -->
+	
+	</div>
+	<div id="showtime">
+	</div>
+	<script>setInterval("showtime.innerHTML=new Date().toLocaleString()+' 星期'+'日一二三四五六'.charAt(new Date().getDay());",1000);
+	</script>
+
+</body>
+</html>
