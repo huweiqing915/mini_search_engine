@@ -20,7 +20,7 @@
 #include "MutexLock.h"
 #include "Log.h"
 
-#define CONFIG_DAT_PATH "../Conf/server.conf" //配置文件存放的位置
+#define CONFIG_DAT_PATH "../Conf/SE.conf" //配置文件存放的位置
 #define MATCH_CHARACTER '='  //配置文件的格式，如server_port = 6688
 
 class Config {

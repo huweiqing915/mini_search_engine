@@ -8,4 +8,22 @@
 #ifndef DEL_DUPLICATE_H_
 #define DEL_DUPLICATE_H_
 
+#include <string>
+#include <map>
+#include <vector>
+#include <queue>
+
+struct PageWord {
+	int _docid;
+	std::string _word;
+	int _frequency;
+};
+
+class DelDuplicate {
+public:
+private:
+	std::priority_queue<PageWord, std::vector<PageWord>, compare> _word_queue;
+	std::set<std::string> _exclude;
+};
+
 #endif
