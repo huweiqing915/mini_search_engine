@@ -8,8 +8,22 @@
 #include "TCPSocket.h"
 #include "Config.h"
 #include "Task.h"
+#include <signal.h>
 
 using namespace std;
+
+// void wait_child_sign(int singno)
+// {
+// 	pid_t exit_pid = waitpid(-1, NULL, WNOHANG);
+// 	if(exit_pid > 0)
+// 	{
+// 		cout << "Singal num:" << singno << " child " << exit_pid << " exit." << endl;
+// 	}
+// 	else if(exit_pid == 0)
+// 	{
+// 		cout << "no child exit!" << endl;
+// 	}
+// }
 
 int main(int argc, char *argv[])
 {
@@ -24,11 +38,12 @@ int main(int argc, char *argv[])
 	while(new_fd = server.tcp_accept())
 	{
 		cout << "client connect" << endl;
+	//	signal(SIGCHLD, wait_child_sign);
 		pid = fork();
 		if(pid == 0)	//pid = 0是子进程
 		{
 			char recv_buf[1024];
-			int iret = server.recv_message(new_fd, (void*)recv_buf, 1024);
+			int iret = server.recv_message(new_fd, recv_buf, 1024);
 			Task task;
 			task._client_fd = new_fd;
 			task.excute_task();
@@ -37,7 +52,15 @@ int main(int argc, char *argv[])
 		else if(pid > 0)	//pid>0是父进程
 		{
 			close(new_fd);
-			waitpid(-1, NULL, WNOHANG);
+			pid_t exit_pid = waitpid(-1, NULL, WNOHANG);
+			if(exit_pid > 0)
+			{
+				cout << exit_pid << " child exit !" << endl; 
+			}
+			else if(exit_pid == 0)
+			{
+				cout << "no child exit!" << endl;
+			}
 		}
 	}
 	return 0;

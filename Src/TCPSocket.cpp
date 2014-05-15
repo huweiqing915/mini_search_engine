@@ -47,6 +47,9 @@ void TCPSocket::tcp_server_init()
 		LogError("Server listen error! ");
 		throw runtime_error("Server listen error!");
 	}
+	//set non block
+	set_non_blocking(_sock_fd);
+
 	cout << "Server Initialization Done..." << endl;
 	LogInfo("Server initialization done!");
 	cout << "Wait client connect..." << endl;
@@ -87,32 +90,51 @@ void TCPSocket::tcp_connect()
 	}
 }
 
-int TCPSocket::send_message(void *buf, size_t len)
+void TCPSocket::set_non_blocking(int sock)	//把socket设置为非阻塞方式
 {
-	int iret = send(_sock_fd, buf, len, 0);
-	cout << "Send message: " << (char*)buf << endl;
+    int opts;
+    opts = fcntl(sock, F_GETFL);
+    if (opts < 0)
+    {
+        throw runtime_error("fcntl(sock,GETFL)");
+        exit(1);
+    }
+    opts = opts | O_NONBLOCK;
+    if (fcntl(sock, F_SETFL, opts) < 0)
+    {
+    	throw runtime_error("fcntl(sock,SETFL,opts)");
+    	exit(1);
+    }
+}
+
+int TCPSocket::send_message(const char *buf)
+{
+	int iret = send(_sock_fd, buf, strlen(buf), 0);
+	cout << "Send message: " << buf << endl;
 	return iret;
 }
-int TCPSocket::send_message(int fd, void *buf, size_t len)
+int TCPSocket::send_message(int fd, const char *buf)
 {
-	int iret = send(fd, buf, len, 0);
-	cout << "Send message: " << (char*)buf << endl;
+	int iret = send(fd, buf, strlen(buf), 0);
+	cout << "Send message: " << buf << endl;
 	return iret;
 }
 
-int TCPSocket::recv_message(void *buf, size_t len)
+int TCPSocket::recv_message(char *buf, size_t len)
 {
 	int iret = recv(_sock_fd, buf, len, 0);
-	cout << "Recv message: " << (char*)buf << endl;
-	LogInfo("Recieve from client : %s" (char*)buf);
+	buf[iret] = '\0';
+	cout << "Recv message: " << buf << endl;
+	LogInfo("Recieve from client : %s", buf);
 	return iret;
 }
 
-int TCPSocket::recv_message(int fd, void *buf, size_t len)
+int TCPSocket::recv_message(int fd, char *buf, size_t len)
 {
 	int iret = recv(fd, buf, len, 0);
-	cout << "Recv message: " << (char*)buf << endl;
-	LogInfo("Recieve from client : %s" (char*)buf);
+	buf[iret] = '\0';
+	cout << "Recv message: " << buf << endl;
+	LogInfo("Recieve from client : %s", buf);
 	return iret;
 }
 
