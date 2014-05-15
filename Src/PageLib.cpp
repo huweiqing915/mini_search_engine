@@ -42,9 +42,9 @@ void PageLib::traversal_dir(const string &dirname)
 			{
 				continue;
 			}
-			traversal_dir(entry->d_name); //递归
+			traversal_dir(entry->d_name); //递归遍历
 		}
-		else //是文件
+		else //如果是文件
 		{
 			doc_id ++;	//记录docid
 			char dir_buf[512];
@@ -73,7 +73,7 @@ static ifstream& open_file(ifstream &is, const string &filename)
 	return is;
 }
 
-//取文章标题
+//取文章标题和内容
 void PageLib::get_title_content(const string &filename, string &title, string &content)
 {
 	ifstream infile;
@@ -82,14 +82,17 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 		throw runtime_error("open file error!");
 	}
 	
-	infile.seekg(0, infile.end);
-	int length = infile.tellg();
-	infile.seekg(0, infile.beg);
+	infile.seekg(0, infile.end);	//把文件流定位到文件尾
+	int length = infile.tellg();	//返回当前位置
+	infile.seekg(0, infile.beg);	//将文件流返回文件头
 
 	char * buffer = new char [length];
 	infile.read(buffer, length);
 
 	content = string(buffer);
+	delete [] buffer;
+	buffer = NULL;
+#ifndef NDEBUG
 	if(infile)
 	{
 		cout << "--------------------" << endl;
@@ -97,14 +100,15 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 	}
 	else
 		cout << "error" << endl;
+#endif
 
 	infile.clear();
-	infile.seekg(0, infile.beg);
+	infile.seekg(0, infile.beg);	//返回文件头
 
 	EncodingConverter trans;
-	string cmp = trans.utf8_to_gbk("【 标  题 】");
+	string cmp = trans.utf8_to_gbk("【 标  题 】");	//取标题
 	string line;
-	for(int ix = 0; ix != 20; ++ix)
+	for(int ix = 0; ix != 20; ++ix)	//超过20行就不找了
 	{
 		line.clear();
 		getline(infile, line);
@@ -120,13 +124,14 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 		infile.seekg(0, infile.beg);
 		getline(infile, title);
 	}
+
 }
 
 
 void PageLib::write_lib(int docid, const string &url, const string &title, string &content)
 {
 	string page = "<doc>\n<docid>" + to_string(docid) + "</docid>\n<url>" + url + "</url>\n<title>" + 
-					title + "</title>\n<content>\n" + content + "\n</content>\n</doc>" + "\n";
+					title + "</title>\n<content>\n" + content + "\n</content>\n</doc>" + "\n"; //格式化
 	string pagelib_path;
 	Config *p = Config::get_instance();
 	p->get_file_name("pagelib_path", pagelib_path);
