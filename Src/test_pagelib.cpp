@@ -6,11 +6,22 @@
  ************************************************************************/
 
 #include "PageLib.h"
+#include "Config.h"
 
 using namespace std;
 
 int main()
 {
+	Config *p_config = Config::get_instance();
+	string pagelib_path;
+	string doc_offset;
+	p_config->get_file_name("pagelib_path", pagelib_path);
+	p_config->get_file_name("doc_offset", doc_offset);
+	ofstream outfile(pagelib_path.c_str(), ofstream::out | ofstream::trunc);
+	ofstream outfile1(doc_offset.c_str(), ofstream::out | ofstream::trunc);
+	outfile.close();
+	outfile1.close();
+
 	PageLib pagelib;
 	string dirname = "../tmp/data";
 //	string filename = "../tmp/test.txt";

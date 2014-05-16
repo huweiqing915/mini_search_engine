@@ -55,8 +55,10 @@ void PageLib::traversal_dir(const string &dirname)
 			cout << url << endl;
 			string title;
 			string content;
+			int offset, length;
 			get_title_content(entry->d_name, title, content);
-			write_lib(doc_id, url, title, content);
+			write_lib(doc_id, url, title, content, offset, length);
+			build_offset_index(doc_id, offset, length);
 			title.clear();
 			content.clear();
 		}
@@ -86,10 +88,11 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 	int length = infile.tellg();	//返回当前位置
 	infile.seekg(0, infile.beg);	//将文件流返回文件头
 
-	char * buffer = new char [length];
+	char * buffer = new char [length + 1];
 	infile.read(buffer, length);
-
+	buffer[length] = '\0';
 	content = string(buffer);
+
 	delete [] buffer;
 	buffer = NULL;
 #ifndef NDEBUG
@@ -119,6 +122,7 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 			break;
 		}
 	}
+	
 	if(title.empty())	//如果没找到，就取第一行
 	{
 		infile.seekg(0, infile.beg);
@@ -128,7 +132,7 @@ void PageLib::get_title_content(const string &filename, string &title, string &c
 }
 
 
-void PageLib::write_lib(int docid, const string &url, const string &title, string &content)
+void PageLib::write_lib(int docid, const string &url, const string &title, string &content, int &offset,int &length)
 {
 	string page = "<doc>\n<docid>" + to_string(docid) + "</docid>\n<url>" + url + "</url>\n<title>" + 
 					title + "</title>\n<content>\n" + content + "\n</content>\n</doc>" + "\n"; //格式化
@@ -136,9 +140,22 @@ void PageLib::write_lib(int docid, const string &url, const string &title, strin
 	Config *p = Config::get_instance();
 	p->get_file_name("pagelib_path", pagelib_path);
 	ofstream outfile;
-	outfile.open(pagelib_path, ofstream::out | ofstream::app);
+	outfile.open(pagelib_path.c_str(), ofstream::out | ofstream::app);
+	offset = outfile.tellp();
 	outfile << page << endl;
+	int offset2 = outfile.tellp();
+	length = offset2 -offset;
 	outfile.close();
 	cout << "write over!" << endl; 
 }
 
+void PageLib::build_offset_index(int docid, int offset, int length)
+{
+	ofstream outfile;
+	Config *p = Config::get_instance();
+	string doc_offset;
+	p->get_file_name("doc_offset", doc_offset);
+	outfile.open(doc_offset.c_str(), ofstream::out | ofstream::app);
+	outfile << docid << "\t" << offset << "\t" << length << endl;
+	outfile.close();
+}
