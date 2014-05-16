@@ -141,10 +141,11 @@ void PageLib::write_lib(int docid, const string &url, const string &title, strin
 	p->get_file_name("pagelib_path", pagelib_path);
 	ofstream outfile;
 	outfile.open(pagelib_path.c_str(), ofstream::out | ofstream::app);
+
 	offset = outfile.tellp();
 	outfile << page << endl;
 	int offset2 = outfile.tellp();
-	length = offset2 -offset;
+	length = offset2 -offset;	//count length
 	outfile.close();
 	cout << "write over!" << endl; 
 }
