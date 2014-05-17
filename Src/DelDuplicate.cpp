@@ -37,17 +37,23 @@ void DelDuplicate::build_feature_code()
 	// 	// cout << _content.substr(pos - 6, CUT_LEN) << endl;
 	// 	++ pos;
 	// }
+#ifndef NDEBUG
+	cout << _content << endl;
+#endif
 	for(string::size_type ix = 0; ix != _content.size(); ++ix)
 	{
 		//if is GBK
 		if((_content[ix] & 0x80))
 		{
 			uint16_t tmp = (_content[ix] << 8) + _content[ix + 1];
-			if(tmp == punct)
+			if(tmp == punct)	
 			{
+				#ifndef NDEBUG
 				cout << "-----GBK-----" << endl;
 				cout << ix << endl;
 				cout << "-------------" << endl;
+				#endif
+				_feature_code += _content.substr(ix - 6, CUT_LEN);
 			}
 			++ix;
 		}
@@ -55,12 +61,25 @@ void DelDuplicate::build_feature_code()
 		{
 			if(_content[ix] == ',')	 //if find english punct ','
 			{
+				#ifndef NDEBUG
 				cout << "-----english----" << endl;
 				cout << ix << endl;
 				cout << "-------------" << endl;
+				#endif
+				_feature_code += _content.substr(ix - 6, CUT_LEN - 1);
 			}
 		}
 	}
+}
+
+const string& DelDuplicate::get_feature_code()
+{
+	return _feature_code;
+}
+
+void DelDuplicate::set_del_status()
+{
+	_del_tag = true;
 }
 
 void DelDuplicate::debug()
