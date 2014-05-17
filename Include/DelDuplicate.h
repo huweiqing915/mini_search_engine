@@ -13,6 +13,8 @@
 #include <iostream>
 #include "EncodingConverter.h"
 
+#define CUT_LEN 14
+
 class DelDuplicate {
 public:
 	DelDuplicate();
