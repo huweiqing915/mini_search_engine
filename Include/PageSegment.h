@@ -17,6 +17,8 @@
 
 #include "MixSegment.hpp"
 
+#define TOPK 10
+
 struct PageWord {
 	std::string _word;
 	int _frequency;
@@ -37,12 +39,21 @@ class PageSegment {
 public:
 	PageSegment();
 	~PageSegment();
-	void build_word_queue(char *web_page);
-	std::string get_top_word();
+	void build_word_queue(char *web_page, const CppJieba::MixSegment &);
+	void set_del_status();
+	std::vector<std::string>& get_word_vector();
+
+	int doc_id;
+	int length;
+	std::string content;
+	bool del_tag;
+
 private:
 	std::priority_queue<PageWord, std::vector<PageWord>, compare> _word_queue;
 	std::set<std::string> _exclude;
-	void init_path(std::string &dict_path, std::string &model_path);
+	std::vector<std::string> _top_k;
+	void put_topk_to_vector();
+	// void init_path(std::string &dict_path, std::string &model_path);
 };
 
 #endif
