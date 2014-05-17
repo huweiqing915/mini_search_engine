@@ -22,25 +22,44 @@ DelDuplicate::~DelDuplicate()
 void DelDuplicate::build_feature_code()
 {
 	EncodingConverter trans;
-	string punct = trans.utf8_to_gbk("，");
+	string cpunct = trans.utf8_to_gbk("，");
+	uint16_t punct = (cpunct[0] << 8) + cpunct[1];
+
+	// cout << punct.size() << endl;
 	//find punct(,)
-	int pre_pos = 0;
-	int pos = 0;
-	while((pos = _content.find_first_of(punct, pos)) != string::npos)
+	// int pos = 0;
+	// while((pos = _content.find(punct, pos)) != string::npos)
+	// {
+	// 	cout << "------------------" << endl;
+	// 	cout << pos << endl;
+	// 	cout << "------------------" << endl;
+	// 	 _feature_code += _content.substr(pos - 6, CUT_LEN);
+	// 	// cout << _content.substr(pos - 6, CUT_LEN) << endl;
+	// 	++ pos;
+	// }
+	for(string::size_type ix = 0; ix != _content.size(); ++ix)
 	{
-		cout << "------------------" << endl;
-		cout << pos << endl;
-		cout << "------------------" << endl;
-		//if length < 6
-		if(pos - pre_pos < 6)
+		//if is GBK
+		if((_content[ix] & 0x80))
 		{
-			pre_pos = pos;
-			++ pos;
-			continue;
+			uint16_t tmp = (_content[ix] << 8) + _content[ix + 1];
+			if(tmp == punct)
+			{
+				cout << "-----GBK-----" << endl;
+				cout << ix << endl;
+				cout << "-------------" << endl;
+			}
+			++ix;
 		}
-		_feature_code += _content.substr(pos - 6, pos + 6);
-		pre_pos = pos;
-		++ pos;
+		else
+		{
+			if(_content[ix] == ',')	 //if find english punct ','
+			{
+				cout << "-----english----" << endl;
+				cout << ix << endl;
+				cout << "-------------" << endl;
+			}
+		}
 	}
 }
 

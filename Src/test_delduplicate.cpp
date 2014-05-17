@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 		del._content = string(buffer);
 
 		del.build_feature_code();
-		del.debug();
+		// del.debug();
 
 		_del_vector.push_back(del);
 	}
