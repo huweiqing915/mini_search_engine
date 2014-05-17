@@ -129,6 +129,7 @@ int main(int argc, char *argv[])
 	cout << "Delete num : " << del_num << endl;
 	cout << "-------------------" << endl;
 
+	//write to a new file
 	ofstream outfile;
 	string delduplicate_lib;
 	p->get_file_name("delduplicate_lib", delduplicate_lib);

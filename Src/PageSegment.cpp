@@ -36,13 +36,6 @@ void PageSegment::build_word_queue(char *web_page, const CppJieba::MixSegment &s
 	//Get exclude
 	ExcludeSet *p_exclude = ExcludeSet::get_instance();
 	set<string> exclude = p_exclude->get_exclude_set();
-// #ifndef NDEBUG
-// 	for(auto & x : exclude)
-// 	{
-// 		cout << x << endl;
-// 	}
-// 	cout << "---------------------" << endl;
-// #endif
 
 	//build word_map
 	map<string, int> word_map; //存放词语-词频的map

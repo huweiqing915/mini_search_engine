@@ -6,6 +6,10 @@
  ************************************************************************/
 
 #include <iostream>
+#include <vector>
+#include "Config.h"
+#include "DelDuplicate.h"
+
 using namespace std;
 
 int main(int argc, char *argv[])
@@ -18,7 +22,7 @@ int main(int argc, char *argv[])
 	p->get_file_name("pagelib_path", pagelib_path);
 
 	//创建文件流
-	ifstream inoffset;
+	ifstream infile;
 	infile.open(doc_offset.c_str());
 	ifstream inlib;
 	inlib.open(pagelib_path.c_str());
@@ -43,11 +47,14 @@ int main(int argc, char *argv[])
 		del._length = strlen(buffer);
 		del._content = string(buffer);
 
+		del.build_feature_code();
+		del.debug();
+
 		_del_vector.push_back(del);
 	}
 
 
-	inoffset.close();
+	infile.close();
 	inlib.close();
 	return 0;
 }

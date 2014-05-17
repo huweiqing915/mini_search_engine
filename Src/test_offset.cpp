@@ -15,6 +15,7 @@
 #include <ostream>
 #include <stdio.h>
 #include "Config.h"
+//test PageSegment
 #include "PageSegment.h"
 
 using namespace std;
@@ -32,6 +33,13 @@ int main()
 	infile.open(doc_offset.c_str());
 	ifstream inlib;
 	inlib.open(pagelib_path.c_str());
+
+	//for test pageSegment
+	string dict_path;
+	string model_path;
+	p->get_file_name("dict_path", dict_path);
+	p->get_file_name("model_path", model_path);
+	CppJieba::MixSegment segment(dict_path, model_path);
 
 	string line;
 	int docid, offset, length;
@@ -56,25 +64,26 @@ int main()
 		char *buffer = new char[length + 1];
 		inlib.read(buffer, length);
 		buffer[length] = '\0';
-		// PageSegment ps;
-		// ps.build_word_queue(buffer);
 
-		// for(int ix = 0; ix != 10; ix++)
-		// {
-		// 	string s = ps.get_top_word();
-		// 	if(s[0] & 0x80)
-		// 	{
-		//  		cout << s << endl;
-		//  	}
-		// }
-	#ifndef NDEBUG
-		ofstream outfile;
-		outfile.open("a.txt");
-		cout << buffer << endl;
-		outfile << buffer << endl;
-		outfile.close();
-		outfile.clear();
-	#endif	
+		//for test PageSegment
+
+		PageSegment ps;
+		ps.build_word_queue(buffer, segment);
+		vector<string> word;
+		word = ps.get_word_vector();
+
+		for(auto & x : word)
+		{
+			cout << x << endl;
+		}
+	// #ifndef NDEBUG
+	// 	ofstream outfile;
+	// 	outfile.open("a.txt");
+	// 	cout << buffer << endl;
+	// 	outfile << buffer << endl;
+	// 	outfile.close();
+	// 	outfile.clear();
+	// #endif	
 		delete [] buffer;
 		cout << "-----------------------------" << endl;
 		cout << "input docid" << endl;

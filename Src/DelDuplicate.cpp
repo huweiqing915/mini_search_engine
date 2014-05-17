@@ -5,11 +5,11 @@
 	> Created Time: 2014年05月15日 星期四 22时07分22秒
  ************************************************************************/
 
-#include "DelDuplicate"
+#include "DelDuplicate.h"
 
 using namespace std;
 
-DelDuplicate::DelDuplicate():del_tag(false)
+DelDuplicate::DelDuplicate():_del_tag(false)
 {
 	
 }
@@ -19,14 +19,18 @@ DelDuplicate::~DelDuplicate()
 
 }
 
-void DelDuplicate::build_feature_word()
+void DelDuplicate::build_feature_code()
 {
 	EncodingConverter trans;
 	string punct = trans.utf8_to_gbk("，");
 	//find punct(,)
 	int pre_pos = 0;
+	int pos = 0;
 	while((pos = _content.find_first_of(punct, pos)) != string::npos)
 	{
+		cout << "------------------" << endl;
+		cout << pos << endl;
+		cout << "------------------" << endl;
 		//if length < 6
 		if(pos - pre_pos < 6)
 		{
@@ -38,4 +42,9 @@ void DelDuplicate::build_feature_word()
 		pre_pos = pos;
 		++ pos;
 	}
+}
+
+void DelDuplicate::debug()
+{
+	cout << _feature_code << endl;
 }
