@@ -10,6 +10,7 @@
 #define DEL_DUPLICATE_H_
 
 #include <string>
+#include <iostream>
 #include "EncodingConverter.h"
 
 class DelDuplicate {
@@ -18,6 +19,7 @@ public:
 	~DelDuplicate();
 
 	void build_feature_code();
+	void debug();
 
 	int _docid;
 	int _length;
