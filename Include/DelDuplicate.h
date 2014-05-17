@@ -21,6 +21,8 @@ public:
 	~DelDuplicate();
 
 	void build_feature_code();
+	const std::string& get_feature_code();
+	void set_del_status();
 	void debug();
 
 	int _docid;
