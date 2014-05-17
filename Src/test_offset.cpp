@@ -56,25 +56,25 @@ int main()
 		char *buffer = new char[length + 1];
 		inlib.read(buffer, length);
 		buffer[length] = '\0';
-		PageSegment ps;
-		ps.build_word_queue(buffer);
+		// PageSegment ps;
+		// ps.build_word_queue(buffer);
 
-		for(int ix = 0; ix != 10; ix++)
-		{
-			string s = ps.get_top_word();
-			if(s[0] & 0x80)
-			{
-		 		cout << s << endl;
-		 	}
-		}
-	// #ifndef NDEBUG
-	// 	ofstream outfile;
-	// 	outfile.open("a.txt");
-	// 	cout << buffer << endl;
-	// 	outfile << buffer << endl;
-	// 	outfile.close();
-	// 	outfile.clear();
-	// #endif	
+		// for(int ix = 0; ix != 10; ix++)
+		// {
+		// 	string s = ps.get_top_word();
+		// 	if(s[0] & 0x80)
+		// 	{
+		//  		cout << s << endl;
+		//  	}
+		// }
+	#ifndef NDEBUG
+		ofstream outfile;
+		outfile.open("a.txt");
+		cout << buffer << endl;
+		outfile << buffer << endl;
+		outfile.close();
+		outfile.clear();
+	#endif	
 		delete [] buffer;
 		cout << "-----------------------------" << endl;
 		cout << "input docid" << endl;

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-PageSegment::PageSegment()
+PageSegment::PageSegment():del_tag(false)
 {
 
 }
@@ -21,23 +21,18 @@ PageSegment::~PageSegment()
 
 }
 
-void PageSegment::init_path(string &dict_path, string &model_path)
-{
-	Config *p = Config::get_instance();
-	p->get_file_name("dict_path", dict_path);
-	p->get_file_name("model_path", model_path);
-}
+// inline void PageSegment::init_path(string &dict_path, string &model_path)
+// {
+// 	Config *p = Config::get_instance();
+// 	p->get_file_name("dict_path", dict_path);
+// 	p->get_file_name("model_path", model_path);
+// }
 
-void PageSegment::build_word_queue(char *web_page)
+void PageSegment::build_word_queue(char *web_page, const CppJieba::MixSegment &segment)
 {
-	string dict_path;
-	string model_path;
-	init_path(dict_path, model_path);
-	
-	CppJieba::MixSegment segment(dict_path, model_path);
 	vector<string> words;
 	segment.cut(web_page, words);
-
+	
 	//Get exclude
 	ExcludeSet *p_exclude = ExcludeSet::get_instance();
 	set<string> exclude = p_exclude->get_exclude_set();
@@ -48,6 +43,7 @@ void PageSegment::build_word_queue(char *web_page)
 // 	}
 // 	cout << "---------------------" << endl;
 // #endif
+
 	//build word_map
 	map<string, int> word_map; //存放词语-词频的map
 	for(vector<string>::iterator iter = words.begin(); iter != words.end(); ++iter)
@@ -55,10 +51,6 @@ void PageSegment::build_word_queue(char *web_page)
 		//if not in the exclude
 		if(!exclude.count(*iter))
 		{
-			// #ifndef NDEBUG
-			// 	cout << "-------------" << endl;
-			// 	cout << *iter << endl;
-			// #endif
 			word_map[*iter] ++;
 		}
 	}
@@ -69,11 +61,35 @@ void PageSegment::build_word_queue(char *web_page)
 	{
 		_word_queue.push(PageWord(map_iter->first, map_iter->second));
 	}
+	//put queue to vector
+	put_topk_to_vector();
 }
 
-string PageSegment::get_top_word()
+void PageSegment::put_topk_to_vector()
 {
-	string ret = _word_queue.top()._word;
-	_word_queue.pop();
-	return ret;
+	int num = 0;
+	while(num != TOPK)
+	{
+		if(_word_queue.empty())	//if is empty
+		{
+			break;
+		}
+		string word = _word_queue.top()._word;
+		_word_queue.pop();
+		if(word[0] & 0x80)	//is GBK
+		{
+			_top_k.push_back(word);
+			num ++;	
+		}
+	}
+}
+
+std::vector<std::string>& PageSegment::get_word_vector()
+{
+	return _top_k;
+}
+
+void PageSegment::set_del_status()
+{
+	del_tag = true;
 }
