@@ -14,6 +14,7 @@
 
 #define CHINESE_PUNCT  "，"	//提取特征码的中文标点符号
 #define ENGLISH_PUNCT  ','	//提取特征码的英文标点符号
+#define CUT_LEN 14	//截取标点符号前后的长度
 
 class FeatureCode {
 public:
