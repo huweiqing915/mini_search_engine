@@ -164,12 +164,12 @@ int main(int argc, char *argv[])
 			continue;
 		}
 		for(vector<DelDuplicate>::size_type iy = ix + 1; 
-			(iy != _del_vector.size()) && (_del_vector[iy]._del_tag == false); ++iy)
+			(iy != _del_vector.size()) && (_del_vector[iy]._del_tag != true); ++iy)
 		{
-			if(_del_vector[iy]._del_tag == true)
-			{
-				continue;
-			}
+			// if(_del_vector[iy]._del_tag == true)
+			// {
+			// 	continue;
+			// }
 			// cout << "-------------------" << endl;
 			// cout << "ix : " << ix << " iy : " << iy << endl;
 			// cout << "-------------------" << endl;
