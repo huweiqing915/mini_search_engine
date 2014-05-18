@@ -11,7 +11,7 @@
 #include "Config.h"
 #include "DelDuplicate.h"
 
-#define SIM_MIN_NUM 0.3 
+#define SIM_MIN_NUM 0.6
 
 using namespace std;
 
@@ -159,9 +159,17 @@ int main(int argc, char *argv[])
 	for(vector<DelDuplicate>::size_type ix = 0; ix != _del_vector.size() - 1; ++ix)
 	{
 		cout << "--------_del_vector[ix]--------" << ix << endl;
+		if(_del_vector[ix]._del_tag == true)	//if is deleted,pass it
+		{
+			continue;
+		}
 		for(vector<DelDuplicate>::size_type iy = ix + 1; 
 			(iy != _del_vector.size()) && (_del_vector[iy]._del_tag == false); ++iy)
 		{
+			if(_del_vector[iy]._del_tag == true)
+			{
+				continue;
+			}
 			// cout << "-------------------" << endl;
 			// cout << "ix : " << ix << " iy : " << iy << endl;
 			// cout << "-------------------" << endl;
