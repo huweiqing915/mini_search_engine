@@ -49,9 +49,9 @@ void DelDuplicate::build_page_vector()
 	int docid, offset, length;
 	while(infile >> docid >> offset >> length)
 	{
-		cout << "-----------------" << endl;
-		cout << docid <<"\t" << offset << "\t" << length << endl;
-		cout << "-----------------" << endl;
+		// cout << "-----------------" << endl;
+		// cout << docid <<"\t" << offset << "\t" << length << endl;
+		// cout << "-----------------" << endl;
 		
 		inlib.seekg(offset);
 		char *buffer = new char[length + 1];
@@ -64,7 +64,6 @@ void DelDuplicate::build_page_vector()
 		fc._content = string(buffer);
 
 		fc.build_feature_code();
-		
 		// fc.debug();
 		_del_vector.push_back(fc);
 	}
@@ -77,14 +76,17 @@ void DelDuplicate::delete_duplicate_page()
 	cout << "-------------------" << endl;
 
 	int del_num = 0;
+	string tmp;
 	for(vector<FeatureCode>::size_type ix = 0; ix != _del_vector.size() - 1; ++ix)
 	{
+		tmp.clear();
+		tmp = _del_vector[ix].get_feature_code();
 		cout << "--------_del_vector[ix]--------" << ix << endl;
 		if(_del_vector[ix]._del_tag == true)	//if is deleted,pass it
 		{
 			continue;
 		}
-		
+
 		for(vector<FeatureCode>::size_type iy = ix + 1; iy != _del_vector.size(); ++iy)
 		{
 			if(_del_vector[ix]._del_tag == true)
@@ -98,38 +100,27 @@ void DelDuplicate::delete_duplicate_page()
 			// cout << "-------------------" << endl;
 			// cout << "ix : " << ix << " iy : " << iy << endl;
 			// cout << "-------------------" << endl;
-			#ifndef NDEBUG
-				cout << "--------_del_vector[ix]--------" << ix << endl;
-				cout << _del_vector[ix].get_feature_code() << endl;
-				cout << "-------_del_vector[iy]-------" << iy << endl;
-				cout << _del_vector[iy].get_feature_code() << endl;
-				cout << "-------ix size-----------" << endl; 
-				cout << _del_vector[ix].get_feature_code().length() << endl;
-				cout << "--------iy size-------" << endl; 
-				cout << _del_vector[iy].get_feature_code().length() << endl;
-				cout << "-------------------" << endl; 
-			#endif
 			//remove same page ix & ix + 1
-			int lcs = longest_common_sequence(_del_vector[ix].get_feature_code(), 
-						_del_vector[iy].get_feature_code());
+			int lcs = longest_common_sequence(tmp, _del_vector[iy].get_feature_code());
 			//len(LCS)/min(len(S1), len(S2))>0.3
-			int min_len = min(_del_vector[ix].get_feature_code().length(), 
-				_del_vector[iy].get_feature_code().length());
+			int min_len = min(_del_vector[ix].feature_code_size(), _del_vector[iy].feature_code_size());
+
 			if(min_len < 10)
 			{
 				continue;
 			}
+
 			float result = (float)lcs / (float)min_len;
-			#ifndef NDEBUG
-			cout << "----------------" << endl;
-			cout << "Lcs: " << lcs << "min_len: " << min_len << endl; 
-			cout << "result" << result << endl;
-			cout << "----------------" << endl;
-			#endif
+
+			// cout << "----------------" << endl;
+			// cout << "Lcs: " << lcs << "min_len: " << min_len << endl; 
+			// cout << "result" << result << endl;
+			// cout << "----------------" << endl;
+
 			if(result > SIM_MIN_NUM)
 			{
 				// cout << "-------------------" << endl;
-				// cout << "Delete a same page" << endl;
+				cout << "Delete a same page : " << del_num <<endl;
 				// cout << "-------------------" << endl;
 				del_num ++;
 				if(_del_vector[ix]._length > _del_vector[iy]._length)
@@ -187,26 +178,13 @@ int DelDuplicate::longest_common_sequence(const string &str1, const string &str2
 
 	int len1 = vec1.size();
 	int len2 = vec2.size();
-#ifndef NDEBUG
-	cout << "-------len1-------" << endl;
-	cout << len1 << endl;
-	cout << "--------len2--------" << endl;
-	cout << len2 << endl;
-	cout << "---------------------" << endl;
-#endif
+
 	int **mem = new int *[len1 + 1];
 	for(int k = 0; k <= len1; ++k)
 	{
 		mem[k] = new int[len2 + 1];
+		bzero(mem[k], (len2+1)*sizeof(int));
 	}
-	// for(int i = 0; i != len1 + 1; ++i)
-	// {
-	// 	mem[i][0] = 0;
-	// }
-	// for(int j = 0; j != len2 + 1; ++j)
-	// {
-	// 	mem[0][j] = 0;
-	// }
 	//dp 
 	for(int i = 1; i != len1 + 1; ++i)
 	{

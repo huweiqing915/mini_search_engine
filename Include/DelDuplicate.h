@@ -15,7 +15,7 @@
 #include "FeatureCode.h"
 #include "Config.h"
 
-#define SIM_MIN_NUM 0.6
+#define SIM_MIN_NUM 0.3
 
 class DelDuplicate {
 public:
