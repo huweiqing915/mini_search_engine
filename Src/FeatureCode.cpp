@@ -43,7 +43,7 @@ void FeatureCode::build_feature_code()
 		if((_content[ix] & 0x80))	//GBK
 		{
 			uint16_t tmp = (_content[ix] << 8) + _content[ix + 1];
-			if(tmp == punct)
+			if(tmp == punct)	//if find Chinese punct ','
 			{
 				_feature_code += _content.substr(ix - 6, CUT_LEN);
 			}

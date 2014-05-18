@@ -6,12 +6,13 @@
  ************************************************************************/
 
 #include "DelDuplicate.h"
+#include <iostream>
 
 using namespace std;
 
-DelDuplicate::DelDuplicate():_del_tag(false)
+DelDuplicate::DelDuplicate()
 {
-	
+
 }
 
 DelDuplicate::~DelDuplicate()
@@ -19,70 +20,234 @@ DelDuplicate::~DelDuplicate()
 
 }
 
-void DelDuplicate::build_feature_code()
+static inline int max(int a, int b)
 {
-	EncodingConverter trans;
-	string cpunct = trans.utf8_to_gbk("，");
-	uint16_t punct = (cpunct[0] << 8) + cpunct[1];
+	return a > b ? a : b;
+}
 
-	// cout << punct.size() << endl;
-	//find punct(,)
-	// int pos = 0;
-	// while((pos = _content.find(punct, pos)) != string::npos)
-	// {
-	// 	cout << "------------------" << endl;
-	// 	cout << pos << endl;
-	// 	cout << "------------------" << endl;
-	// 	 _feature_code += _content.substr(pos - 6, CUT_LEN);
-	// 	// cout << _content.substr(pos - 6, CUT_LEN) << endl;
-	// 	++ pos;
-	// }
-#ifndef NDEBUG
-	cout << _content << endl;
-#endif
-	for(string::size_type ix = 0; ix != _content.size(); ++ix)
+static inline int min(int a, int b)
+{
+	return a < b ? a : b; 
+}
+
+//建立含有特征码网页的vector
+void DelDuplicate::build_page_vector()
+{
+	Config *p = Config::get_instance();
+	string doc_offset;
+	string pagelib_path;
+	//读取需要的文件
+	p->get_file_name("doc_offset", doc_offset);
+	p->get_file_name("pagelib_path", pagelib_path);
+
+	//创建文件流
+	ifstream infile;
+	infile.open(doc_offset.c_str());
+	ifstream inlib;
+	inlib.open(pagelib_path.c_str());
+
+	int docid, offset, length;
+	while(infile >> docid >> offset >> length)
 	{
-		//if is GBK
-		if((_content[ix] & 0x80))
-		{
-			uint16_t tmp = (_content[ix] << 8) + _content[ix + 1];
-			if(tmp == punct)	
-			{
-				#ifndef NDEBUG
-				cout << "-----GBK-----" << endl;
-				cout << ix << endl;
-				cout << "-------------" << endl;
-				#endif
-				_feature_code += _content.substr(ix - 6, CUT_LEN);
-			}
-			++ix;
-		}
-		else
-		{
-			if(_content[ix] == ',')	 //if find english punct ','
-			{
-				#ifndef NDEBUG
-				cout << "-----english----" << endl;
-				cout << ix << endl;
-				cout << "-------------" << endl;
-				#endif
-				_feature_code += _content.substr(ix - 6, CUT_LEN - 1);
-			}
-		}
+		cout << "-----------------" << endl;
+		cout << docid <<"\t" << offset << "\t" << length << endl;
+		cout << "-----------------" << endl;
+		
+		inlib.seekg(offset);
+		char *buffer = new char[length + 1];
+		inlib.read(buffer, length);
+		buffer[length] = '\0';
+
+		FeatureCode fc;
+		fc._docid = docid;
+		fc._length = strlen(buffer);
+		fc._content = string(buffer);
+
+		fc.build_feature_code();
+		
+		// fc.debug();
+		_del_vector.push_back(fc);
 	}
 }
 
-const string& DelDuplicate::get_feature_code()
+void DelDuplicate::delete_duplicate_page()
 {
-	return _feature_code;
+	cout << "-------------------" << endl;
+	cout << "start delete pages" << endl;
+	cout << "-------------------" << endl;
+
+	int del_num = 0;
+	for(vector<FeatureCode>::size_type ix = 0; ix != _del_vector.size() - 1; ++ix)
+	{
+		cout << "--------_del_vector[ix]--------" << ix << endl;
+		if(_del_vector[ix]._del_tag == true)	//if is deleted,pass it
+		{
+			continue;
+		}
+		
+		for(vector<FeatureCode>::size_type iy = ix + 1; iy != _del_vector.size(); ++iy)
+		{
+			if(_del_vector[ix]._del_tag == true)
+			{
+				break;
+			}
+			if(_del_vector[iy]._del_tag == true)
+			{
+				continue;
+			}
+			// cout << "-------------------" << endl;
+			// cout << "ix : " << ix << " iy : " << iy << endl;
+			// cout << "-------------------" << endl;
+			#ifndef NDEBUG
+				cout << "--------_del_vector[ix]--------" << ix << endl;
+				cout << _del_vector[ix].get_feature_code() << endl;
+				cout << "-------_del_vector[iy]-------" << iy << endl;
+				cout << _del_vector[iy].get_feature_code() << endl;
+				cout << "-------ix size-----------" << endl; 
+				cout << _del_vector[ix].get_feature_code().length() << endl;
+				cout << "--------iy size-------" << endl; 
+				cout << _del_vector[iy].get_feature_code().length() << endl;
+				cout << "-------------------" << endl; 
+			#endif
+			//remove same page ix & ix + 1
+			int lcs = longest_common_sequence(_del_vector[ix].get_feature_code(), 
+						_del_vector[iy].get_feature_code());
+			//len(LCS)/min(len(S1), len(S2))>0.3
+			int min_len = min(_del_vector[ix].get_feature_code().length(), 
+				_del_vector[iy].get_feature_code().length());
+			if(min_len < 10)
+			{
+				continue;
+			}
+			float result = (float)lcs / (float)min_len;
+			#ifndef NDEBUG
+			cout << "----------------" << endl;
+			cout << "Lcs: " << lcs << "min_len: " << min_len << endl; 
+			cout << "result" << result << endl;
+			cout << "----------------" << endl;
+			#endif
+			if(result > SIM_MIN_NUM)
+			{
+				// cout << "-------------------" << endl;
+				// cout << "Delete a same page" << endl;
+				// cout << "-------------------" << endl;
+				del_num ++;
+				if(_del_vector[ix]._length > _del_vector[iy]._length)
+				{
+					_del_vector[iy].set_del_status();
+				}
+				else
+				{
+					_del_vector[ix].set_del_status();
+				}
+			}
+		}
+	}
+	cout << "-------------------" << endl;
+	cout << "Delete num : " << del_num << endl;
+	cout << "-------------------" << endl;
 }
 
-void DelDuplicate::set_del_status()
+void DelDuplicate::parse_gbk_string(const string &str, vector<uint16_t> &vec) 
 {
-	_del_tag = true;
+    vec.clear();
+    for (string::size_type ix = 0; ix != str.size(); ++ix) 
+    {
+        if (str[ix] & 0x80) 
+        {
+        	uint16_t t;
+            if (ix + 1 == str.size()) //check
+            {
+                // throw runtime_error("invalid GBK string");
+            	t = str[ix];
+            	vec.push_back(t);
+            	break;
+            }
+            else
+            {
+            	t = (str[ix] << 8) + str[ix + 1];
+            	vec.push_back(t);
+            	++ix;
+            }       
+        } 
+        else 
+        {
+        	uint16_t t1 = str[ix];
+            vec.push_back(t1);
+        }
+    }
 }
 
-void DelDuplicate::debug()
+int DelDuplicate::longest_common_sequence(const string &str1, const string &str2)
 {
-	cout << _feature_code << endl;
+	vector<uint16_t> vec1;
+	vector<uint16_t> vec2;
+	parse_gbk_string(str1, vec1);
+	parse_gbk_string(str2, vec2);
+
+	int len1 = vec1.size();
+	int len2 = vec2.size();
+#ifndef NDEBUG
+	cout << "-------len1-------" << endl;
+	cout << len1 << endl;
+	cout << "--------len2--------" << endl;
+	cout << len2 << endl;
+	cout << "---------------------" << endl;
+#endif
+	int **mem = new int *[len1 + 1];
+	for(int k = 0; k <= len1; ++k)
+	{
+		mem[k] = new int[len2 + 1];
+	}
+	// for(int i = 0; i != len1 + 1; ++i)
+	// {
+	// 	mem[i][0] = 0;
+	// }
+	// for(int j = 0; j != len2 + 1; ++j)
+	// {
+	// 	mem[0][j] = 0;
+	// }
+	//dp 
+	for(int i = 1; i != len1 + 1; ++i)
+	{
+		for(int j = 1; j != len2 + 1; ++j)
+		{
+			if(vec1[i-1] == vec2[j-1])
+			{
+				mem[i][j] = mem[i-1][j-1] + 1;
+			}
+			else
+			{
+				mem[i][j] = max(mem[i-1][j], mem[i][j-1]);
+			}
+		}
+	}
+	int ret = mem[len1][len2];
+	for(int k = 0; k <= len1; ++k)
+	{
+		delete [] mem[k];
+	}
+	delete [] mem;
+	mem = NULL;
+
+	return ret;
+}
+
+void DelDuplicate::write_to_file()
+{
+	ofstream outfile;
+	string delduplicate_lib;
+	Config *p = Config::get_instance();
+	p->get_file_name("delduplicate_lib", delduplicate_lib);
+	outfile.open(delduplicate_lib.c_str());
+	//write to  delduplicate_lib
+	for(vector<FeatureCode>::size_type ix = 0; ix != _del_vector.size(); ++ix)
+	{
+		//if del_tag is false
+		if(!_del_vector[ix]._del_tag)
+		{
+			outfile << _del_vector[ix]._content << endl;
+		}
+	}
+	outfile.close();
 }
