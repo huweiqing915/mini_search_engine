@@ -114,9 +114,17 @@ void RemoveRepeat::write_to_file()
 {
 	Config *p = Config::get_instance();
 	ofstream outfile;
+	ofstream ofs;
 	string delduplicate_lib;
+	string new_offset;
 	p->get_file_name("delduplicate_lib", delduplicate_lib);
+	p->get_file_name("new_offset", new_offset);
+
 	outfile.open(delduplicate_lib.c_str());
+	ofs.open(new_offset.c_str());
+	int offset;
+	int length;
+	int docid = 1;
 	//write to  delduplicate_lib
 	for(vector<Document>::size_type ix = 0; ix != _doc_vec.size(); ++ix)
 	{
@@ -124,12 +132,20 @@ void RemoveRepeat::write_to_file()
 		if(!_doc_vec[ix].del_tag)
 		{
 			//rewrite docid;
-			// size_t pos = _doc_vec[ix].content.find("<docid>");
-			// _doc_vec[ix].content.replace(pos + strlen("<docid>"), 1, to_string(ix + 1));
+			size_t pos = _doc_vec[ix].content.find("<docid>");
+			size_t pos1 = _doc_vec[ix].content.find("</docid>");
+			size_t len = strlen("<docid>");
+			_doc_vec[ix].content.replace(pos + len, pos1 - pos - len, to_string(docid));
+			offset = outfile.tellp();
 			outfile << _doc_vec[ix].content << endl;
+			int offset1 = outfile.tellp();
+			length = offset1 - offset;
+
+			ofs << docid << "\t" << offset << "\t" << length << endl;
+			docid ++; 
 		}
 	}
-
+	ofs.close();
 	outfile.close();
 }
 
