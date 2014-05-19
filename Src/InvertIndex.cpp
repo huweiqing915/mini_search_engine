@@ -10,7 +10,7 @@
 
 using namespace std;
 
-InvertIndex::InvertIndex()
+InvertIndex::InvertIndex():_docment_num(0)
 {
 
 }
@@ -39,8 +39,9 @@ void InvertIndex::build_invert_index(const CppJieba::MixSegment &segment)
 	{
 		cout << "-----------------" << endl;
 		cout << docid <<"\t" << offset << "\t" << length << endl;
-		cout << "-----------------" << endl;
+		// cout << "-----------------" << endl;
 		
+		_docment_num ++;
 		inlib.seekg(offset);
 		char *buffer = new char[length + 1];
 		inlib.read(buffer, length);
@@ -57,6 +58,7 @@ void InvertIndex::build_invert_index(const CppJieba::MixSegment &segment)
 		for(vector<string>::iterator iter = words.begin(); iter != words.end(); ++iter)
 		{
 		//if not in the exclude
+		//存放词语-词频的map
 			if(!exclude.count(*iter))
 			{
 				++((_invert_index[*iter])[docid]); 
@@ -65,20 +67,61 @@ void InvertIndex::build_invert_index(const CppJieba::MixSegment &segment)
 	}
 }
 
-void InvertIndex::write_to_file()
+void InvertIndex::count_word_weight()
+{
+	int df = 0;
+	float weight = 0.0;
+	for(auto & x : _invert_index)
+	{
+		//x.first -> word , x.second-> map<docid, frequency>;
+		df = x.second.size();
+		for(auto & y : x.second)
+		{
+			//y.first:docid, y.second:frequency;
+			//w = tf*log(N/df)
+			weight = y.second * log(_docment_num/df);
+			(_word_weight[x.first])[y.first] = weight;
+		}
+	}
+}
+
+void InvertIndex::write_word_weight()
+{
+	Config *p = Config::get_instance();
+	string word_weight;	
+	p->get_file_name("word_weight", word_weight);
+	ofstream outfile;
+	outfile.open(word_weight.c_str());
+	for(auto & x : _word_weight)
+	{
+		outfile << x.first << "\t";
+		for(auto & y : x.second)
+		{
+			//归一化
+			outfile << y.first << " " << setprecision(2) << y.second << "\t";
+		}
+		outfile << endl;
+	}
+	outfile.close();
+}
+
+void InvertIndex::write_index()
 {
 	Config *p = Config::get_instance();
 	string index;	
 	p->get_file_name("invert_index", index);
 	ofstream outfile;
 	outfile.open(index.c_str());
+
 	for(auto & x : _invert_index)
 	{
+		outfile << x.first << "\t";
 		for(auto & y : x.second)
 		{
-			outfile << x.first << "\t" << y.first << ";" << y.second << "\t";
+			outfile << y.first << " " << y.second << "\t";
 		}
 		outfile << endl;
 	}
 	outfile.close();
 }
+

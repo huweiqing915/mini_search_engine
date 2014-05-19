@@ -9,9 +9,13 @@
 #define INVERT_INDEX_H_
 
 #include <unordered_map>
+#include <map>
 #include <string>
 #include <set>
+#include <utility>
 #include <fstream>
+#include <iomanip>  
+#include <math.h>
 #include <string.h>
 
 #include "MixSegment.hpp"
@@ -22,10 +26,17 @@ public:
 	InvertIndex();
 	~InvertIndex();
 	void build_invert_index(const CppJieba::MixSegment &);
-	void write_to_file();
+	void count_word_weight();
+	void write_word_weight();
+	void write_index();
 private:
-	//word : docid : frequency
-	std::unordered_map<std::string, std::map<int, int> > _invert_index;
+	//word : <docid : frequency>
+	std::map<std::string, std::map<int, int> > _invert_index;
+	//word : <docid : weight>
+	std::map<std::string, std::map<int, float> > _word_weight;
+	//存放docid - 词语 - weight 的map
+	std::map<int, std::map<std::string, int> > _doc_word;
+	int _docment_num;
 };
 
 #endif
