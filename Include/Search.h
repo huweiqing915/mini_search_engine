@@ -11,9 +11,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "EncodingConverter.h"
 #include "MixSegment.hpp"
@@ -21,21 +22,22 @@
 
 class Search {
 public:
-	typedef std::unordered_map<std::string, std::vector<std::pair<int, float> > > hash_map;
-	typedef std::unordered_map<std::string, std::vector<std::pair<int, float> > >::iterator hash_map_iter;
-	typedef std::unordered_map<int, std::unordered_map<std::string, float> >::iterator docid_map_iter;
+	typedef std::unordered_map<std::string, std::map<int, float> > HashMap;
+	typedef std::unordered_map<std::string, std::map<int, float> >::iterator HashMapIter;
 	Search();
-	~Search();
-	void search_result(const string &, const CppJieba::MixSegment &);
+	virtual ~Search();
+
+	void search_result(const std::string &, const CppJieba::MixSegment &);
+	void debug();
 private:
-	std::string _search_word;
-	std::unordered_map<std::string, std::vector<std::pair<int, float> > > _weight_map;
-	//docid, <string:word, float:weight>
-	std::unordered_map<int, std::unordered_map<std::string, float> > _docid_map;
+	//word - docid : weight
+	std::unordered_map<std::string, std::map<int, float> > _weight_map;
+	std::vector<std::string> _offset_vec;
 	//用户查询词
-	std::map<std::string, float> _query_word;
-	void build_weight_map();
-	float calculate_text_similar(const vector<pair<int, int> > &);
+	void init_weight_map();
+	void init_offset_vec();
+	float calculate_text_similar(const std::vector<std::pair<int, int> > &);
+	void calculate_intersection(std::vector<std::vector<int> > &, std::vector<int> &);
 };
 
 #endif
