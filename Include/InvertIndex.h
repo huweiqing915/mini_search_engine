@@ -35,7 +35,7 @@ private:
 	//word : <docid : weight>
 	std::map<std::string, std::map<int, float> > _word_weight;
 	//存放docid - 词语 - weight 的map
-	std::map<int, std::map<std::string, int> > _doc_word;
+	std::map<int, std::map<std::string, float> > _doc_word;
 	int _docment_num;
 };
 

@@ -41,12 +41,18 @@ void InvertIndex::build_invert_index(const CppJieba::MixSegment &segment)
 		cout << docid <<"\t" << offset << "\t" << length << endl;
 		// cout << "-----------------" << endl;
 		
-		_docment_num ++;
+		_docment_num ++;	//count N
+
 		inlib.seekg(offset);
 		char *buffer = new char[length + 1];
 		inlib.read(buffer, length);
 		buffer[length] = '\0';
 		string doc = string(buffer);
+
+		size_t pos_begin = doc.find("<content>");
+		size_t pos_end = doc.find("</content>");
+		size_t len = strlen("<content>");
+		doc = doc.substr(pos_begin + len, pos_end - pos_begin - len - 1);
 
 		vector<string> words;
 		segment.cut(doc, words);
@@ -61,7 +67,7 @@ void InvertIndex::build_invert_index(const CppJieba::MixSegment &segment)
 		//存放词语-词频的map
 			if(!exclude.count(*iter))
 			{
-				++((_invert_index[*iter])[docid]); 
+				++((_invert_index[*iter])[docid]);
 			}
 		}
 	}
@@ -74,34 +80,60 @@ void InvertIndex::count_word_weight()
 	for(auto & x : _invert_index)
 	{
 		//x.first -> word , x.second-> map<docid, frequency>;
-		df = x.second.size();
+		df = x.second.size();	//df
 		for(auto & y : x.second)
 		{
 			//y.first:docid, y.second:frequency;
 			//w = tf*log(N/df)
-			weight = y.second * log(_docment_num/df);
-			(_word_weight[x.first])[y.first] = weight;
+			weight = y.second * log((_docment_num/df) + 0.05);
+			// (_word_weight[x.first])[y.first] = weight;
+			(_doc_word[y.first])[x.first] = weight;
 		}
 	}
+	_invert_index.clear();
 }
 
 void InvertIndex::write_word_weight()
 {
 	Config *p = Config::get_instance();
 	string word_weight;	
-	p->get_file_name("word_weight", word_weight);
+	p->get_file_name("weight_index", word_weight);
 	ofstream outfile;
 	outfile.open(word_weight.c_str());
+	float tmp = 0.0;
+	float sum;
+	for(auto & x : _doc_word)
+	{
+		sum = 0.0;
+		//x.first : docid, x.second:<word, weight>
+		//每一篇文章，归一化
+		cout << "-------doc size--------" << endl;
+		cout << x.second.size() << endl;
+		cout << "------------------------" << endl;
+		for(auto & ix : x.second)
+		{
+			//wi的平方和
+			sum += ix.second * ix.second;
+		}
+		for(auto & y : x.second)
+		{
+			//y.second:weight
+			tmp =  y.second / sqrt(sum);
+			(_word_weight[y.first])[x.first] = tmp;
+		}
+	}
+
+	//write to file
 	for(auto & x : _word_weight)
 	{
 		outfile << x.first << "\t";
 		for(auto & y : x.second)
 		{
-			//归一化
 			outfile << y.first << " " << setprecision(2) << y.second << "\t";
 		}
 		outfile << endl;
 	}
+
 	outfile.close();
 }
 

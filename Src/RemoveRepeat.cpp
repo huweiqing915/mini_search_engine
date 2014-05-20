@@ -93,6 +93,7 @@ void RemoveRepeat::remove_repeat_page()
 				cout << "-------------------" << endl;
 			#endif
 				del_num ++;
+				//删除长度短的
 				if(_doc_vec[ix].length > _doc_vec[iy].length)
 				{
 					_doc_vec[iy].set_del_status();

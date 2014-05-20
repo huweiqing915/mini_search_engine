@@ -26,9 +26,8 @@ int main()
 	
 	InvertIndex ix;
 	ix.build_invert_index(segment);
+	ix.write_index();
 	ix.count_word_weight();
 	ix.write_word_weight();
-	ix.write_index();
-
 	return 0;
 }
