@@ -27,18 +27,24 @@ public:
 	Search();
 	virtual ~Search();
 
-	void process_search_word(const std::string &, const CppJieba::MixSegment &);
+	void search_result(const std::string &, std::vector<std::pair<std::string, std::string> > &, const CppJieba::MixSegment &);
+
 	void debug();
 private:
 	//word - docid : weight
 	std::unordered_map<std::string, std::map<int, float> > _weight_map;
 	std::vector<std::string> _offset_vec;
 	//query word-weight
-	map<string, float> _word_weight_map;
+	std::map<std::string, float> _query_weight_map;
+	//存放相似度排序结果的
+	std::multimap<float, int> _sim_result_map;
 	void init_weight_map();
 	void init_offset_vec();
-	float calculate_text_similar(const std::vector<std::pair<int, int> > &);
+	void process_search_word(std::vector<std::string> &);
+	void query_tf_idf(std::map<std::string, int> &);
 	void calculate_intersection(std::vector<std::vector<int> > &, std::vector<int> &); //求文档的交集
+	void calculate_similar(std::vector<int> &r);
+	void search_offset(EncodingConverter &, std::vector<std::pair<std::string, std::string> > &);
 };
 
 #endif

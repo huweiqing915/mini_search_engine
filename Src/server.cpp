@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "TCPSocket.h"
+#include "Search.h"
 #include "Task.h"
 
 #include <sys/epoll.h>
@@ -19,13 +20,24 @@ int main()
 {
 	Config *p = Config::get_instance();
 	string ip, port;
+    string dict_path;
+    string model_path;
+    //读取需要的文件
 	p->get_file_name("server_ip", ip);
 	p->get_file_name("server_port", port);
-	TCPSocket server(ip, port);	//从配置文件读取ip和port
-	server.tcp_server_init();	//初始化server--create socket(),bind(),listen(),setnonblock()
+    p->get_file_name("dict_path", dict_path);
+    p->get_file_name("model_path", model_path);
+
+    //初始化切词工具
+    CppJieba::MixSegment segment(dict_path, model_path);
+
+    Search search;
+    vector<pair<string, string> > result_vec;
+
+    TCPSocket server(ip, port); //从配置文件读取ip和port
+    server.tcp_server_init();   //初始化server--create socket(),bind(),listen(),setnonblock()
 
 	struct epoll_event ev, events[MAX_EVENTS];
-
 	int epollfd = epoll_create(256);
 	if (epollfd == -1)
     {
@@ -43,7 +55,7 @@ int main()
 	while(true)
 	{
 		int nfds = epoll_wait(epollfd, events, MAX_EVENTS, TIMEOUT);
-		cout << nfds << endl;
+		// cout << nfds << endl;
 		sleep(2);
         if (nfds == -1)
         {
@@ -75,8 +87,10 @@ int main()
                 //如果是已经连接的用户，并且收到数据，那么进行读入
                 int sockfd = events[ix].data.fd;
                 char recv_buf[1024];
-                int read_len  = server.recv_message(sockfd, recv_buf, 1024);
-
+                int read_len = server.recv_message(sockfd, recv_buf, 1024);
+                
+                result_vec.clear();
+                search.search_result(recv_buf, result_vec, segment);
                 if (read_len == 0)
                 {
                     close(sockfd);
@@ -92,7 +106,12 @@ int main()
                 int sockfd = events[ix].data.fd;
               	Task task;
               	task._client_fd = sockfd;
+                task._send_vec = result_vec;
+                cout << "--------------" << endl;
+                cout << "_send_vec.size():" << task._send_vec.size() << endl;
               	task.excute_task();
+                task._send_vec.clear();
+                result_vec.clear();
                 ev.data.fd = sockfd;
                 //写完后，这个sockfd准备读
                 ev.events = EPOLLIN | EPOLLET;

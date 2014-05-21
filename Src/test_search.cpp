@@ -20,6 +20,8 @@ int main(int argc, char const *argv[])
 	p->get_file_name("dict_path", dict_path);
 	p->get_file_name("model_path", model_path);
 
+	vector<pair<string, string> > result_vec;
+
 	//初始化切词工具
 	CppJieba::MixSegment segment(dict_path, model_path);
 
@@ -28,8 +30,14 @@ int main(int argc, char const *argv[])
 	cout << "input word:" << endl;
 	while(cin >> word)
 	{
-		query.search_result(word, segment);
-		cout << "input word:" << endl;
+		result_vec.clear();
+		query.search_result(word, result_vec, segment);
+		for(auto & x: result_vec)
+		{
+			cout << x.first << endl;
+			cout << x.second << endl;
+			cout << "---------------" << endl;
+		}
 	}
 
 	return 0;

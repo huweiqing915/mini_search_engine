@@ -20,18 +20,18 @@ string Task::json_string()
 {
 	Json::Value root;
 	Json::Value arr;
-	int i = 0;
-	while(i < 10)
+	for(auto & x : _send_vec)
 	{
 		Json::Value elem;
-		char title[128] = "";
-		char summary[128] = "";
-		sprintf(title, "title_%d", i);
-		sprintf(summary, "summary_%d", i);
-		elem["title"] = title;
-		elem["summary"] = summary;
+		// char title[1024] = "";
+		// char summary[10240] = "";
+		// strcpy(title, x.first.c_str());
+		// strcpy(summary, x.second.c_str());
+		// sprintf(title, "%s", title);
+		// sprintf(summary, "sum\n%s", summary);
+		elem["title"] = x.first;
+		elem["summary"] = x.second;
 		arr.append(elem);
-		i++;
 	}
 	root["files"] = arr;
 	Json::StyledWriter stlwriter;
