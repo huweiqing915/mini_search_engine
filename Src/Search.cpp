@@ -68,35 +68,7 @@ void Search::init_offset_vec()
 	infile.close();
 }
 
-//根据docid,计算文本相似度
-// float Search::calculate_text_similar(const vector<pair<int, float> > &docid_weight_vec)
-// {
-// 	vector<pair<int, int> >::const_iterator iter = docid_weight_vec.begin();
-// 	vector<float> sim_vec; 
-// 	//一个query与每一篇文档中的相似度
-// 	while(iter != docid_weight_vec.end())
-// 	{
-// 		float sim = 0.0;
-// 		//pair<int:docid, int:weight>
-// 		//find docid, and get a unordered_map<word, weight> >
-// 		//iter->first:docid
-// 		//获得docid后找这篇文章的所有词
-// 		docid_map_iter docid_iter = _docid_map.find(iter->first);
-// 		//docid_iter.second:unordered_map
-// 		unordered_map<string, float> every_docid_map = docid_iter->second;
-// 		for(auto & x : _query_map)
-// 		{
-// 			if(erver_docid_map.find(x.first) != ervery_docid_map.end())
-// 			{
-// 				//一个query与一篇文章的相似度
-// 				sim += every_docid_map.second * x.second; 
-// 			}
-// 		}
-// 		sim_vec.push_back(sim);
-// 		++iter;
-// 	}
-// }
-
+//求文档的交集
 void Search::calculate_intersection(vector<vector<int> > &idvec_vec, vector<int> &result)
 {
 	vector<int>::iterator iter;
@@ -116,7 +88,7 @@ void Search::calculate_intersection(vector<vector<int> > &idvec_vec, vector<int>
 	}
 }
 
-void Search::search_result(const string &search_word, const CppJieba::MixSegment &segment)
+void Search::process_search_word(const string &search_word, const CppJieba::MixSegment &segment)
 {
 	EncodingConverter trans;
 	string query_word;
@@ -125,41 +97,46 @@ void Search::search_result(const string &search_word, const CppJieba::MixSegment
 	vector<string> words;
 	segment.cut(query_word, words);
 
-	for(auto & x : words)
-	{
-		cout << "----------" << endl;
-		cout << x << endl;
-		cout << "-------------" << endl;
-	}
-
 	ExcludeSet *p_exclude = ExcludeSet::get_instance();
 	set<string> exclude = p_exclude->get_exclude_set();
 
 	//存放每一个单词的docid的vector
-	vector<vector<int> > idvec_vec; 
-	//find user's word
-	cout << "------------begin--------" << endl;
+	vector<vector<int> > idvec_vec;
+	//存放查询词的map - word:tf
+	map<string, int> query_map;
+	//docid - word - weight
+	map<int, map<string, float> > id_map_map;
+	//遍历用户查询词，切词后的vector
 	for(vector<string>::iterator iter = words.begin(); iter != words.end(); ++iter)
 	{
-		vector<int> id_tmp;
+		vector<int> id_tmp; 
 		//remove stop words;
 		if(!exclude.count(*iter))
 		{
+			#ifndef NDEBUG
+			cout << trans.gbk_to_utf8(*iter) << endl;
+			#endif
+			++query_map[*iter];
 			//*iter
 			HashMapIter map_iter = _weight_map.find(*iter);
-			//map_iter->second : vector<pair<int, float> >
+			//map_iter->second : map<int, float>
 			//把每一个单词的docid放进vector中
-			for(auto & x : map_iter->second)
+			if(map_iter != _weight_map.end())
 			{
-				id_tmp.push_back(x.first);
+				for(auto & x : map_iter->second)
+				{
+					//x.first:docid, *iter:word, x.second:weight
+					(id_map_map[x.first])[*iter] = x.second;
+					//push_back(docid)
+					id_tmp.push_back(x.first);
+				}
+				idvec_vec.push_back(id_tmp);
+				id_tmp.clear();
 			}	
 		}
-		idvec_vec.push_back(id_tmp);
-		id_tmp.clear();
 	}
-	cout << "-------------" << endl;
-	cout << "idvec_vec.size()" << idvec_vec.size() << endl;
-	cout << "-------------" << endl;
+
+	//存放交集的结果
 	vector<int> result;
 	if(idvec_vec.size() > 1)
 	{
@@ -171,14 +148,61 @@ void Search::search_result(const string &search_word, const CppJieba::MixSegment
 	{
 		result = idvec_vec[0];
 	}
-
+#ifndef NDEBUG
 	for(vector<int>::size_type ix = 0; ix != result.size(); ++ix)
 	{
 		cout << result[ix] << "\t";
 	}
 	cout << endl;
+#endif
 	//根据交集求相似度
+	calculate_similar(result);
+}
 
+void Search::query_tf_idf(map<string, int> &query_map)
+{
+	//word:weight
+	int N = _offset_vec.size();
+	for(auto & x : query_map)
+	{
+		HashMapIter map_iter = _weight_map.find(*iter);
+		int df = map_iter->second.size(); 
+		float weight = x.second * log((N/df) + 0.05);
+		_word_weight_map[x.first] = weight;
+	}
+	//对刚才的权重归一化，得到真正的权重
+	float sum = 0.0
+	for(auto & ix : _word_weight_map)
+	{
+		sum += ix.second * ix.second;
+	}
+	for(auto & ix : _word_weight_map)
+	{
+		float tmp_weight = ix.second / sqrt(sum);
+		_word_weight_map[ix.first] = tmp_weight;
+	}
+}
+
+//根据查询词的map，以及文档交集求相似度
+void Search::calculate_similar(vector<int> &result, map<int, map<string, float> > &id_map_map)
+{
+	map<float, int> sim_result_map;
+	float sim = 0.0
+	for(int ix = 0; ix != result.size(); ++ix)
+	{
+		sim = 0.0;
+		//result[ix] = docid
+		map<string, float> tmp_map = id_map_map[result[ix]];
+		map<string, float>::iterator iter1 = tmp_map.begin();
+		map<string, float>::iterator iter2 = _word_weight_map.begin();
+		while(iter1 != tmp_map.end() && iter2 != _word_weight_map.end())
+		{
+			sim += iter1->second * iter2->second;
+			iter1 ++;
+			iter2 ++;
+		}
+		sim_result_map[sim] = result[ix];
+	}
 }
 
 // void Search::debug()

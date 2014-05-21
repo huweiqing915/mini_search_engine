@@ -27,17 +27,18 @@ public:
 	Search();
 	virtual ~Search();
 
-	void search_result(const std::string &, const CppJieba::MixSegment &);
+	void process_search_word(const std::string &, const CppJieba::MixSegment &);
 	void debug();
 private:
 	//word - docid : weight
 	std::unordered_map<std::string, std::map<int, float> > _weight_map;
 	std::vector<std::string> _offset_vec;
-	//用户查询词
+	//query word-weight
+	map<string, float> _word_weight_map;
 	void init_weight_map();
 	void init_offset_vec();
 	float calculate_text_similar(const std::vector<std::pair<int, int> > &);
-	void calculate_intersection(std::vector<std::vector<int> > &, std::vector<int> &);
+	void calculate_intersection(std::vector<std::vector<int> > &, std::vector<int> &); //求文档的交集
 };
 
 #endif
