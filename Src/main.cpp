@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
             task._send_vec = result_vec;
             cout << "--------------" << endl;
             cout << "_send_vec.size():" << task._send_vec.size() << endl;
-			task.excute_task();
+			task.excute_task();		
 			close(task._client_fd);
 			exit(1);
 		}
