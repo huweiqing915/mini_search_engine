@@ -20,13 +20,22 @@ RemoveRepeat::~RemoveRepeat()
 
 }
 
-void RemoveRepeat::build_document_vec(const CppJieba::MixSegment &segment)
+//把所有的document放入vector中，每一篇文档都是一个Document对象
+void RemoveRepeat::build_document_vec()
 {
 	Config *p = Config::get_instance();
 	string doc_offset;
 	string pagelib_path;
+	string dict_path;
+	string model_path;
+	//读取需要的文件
 	p->get_file_name("doc_offset", doc_offset);
 	p->get_file_name("pagelib_path", pagelib_path);
+	p->get_file_name("dict_path", dict_path);
+	p->get_file_name("model_path", model_path);
+
+	//初始化切词工具
+	CppJieba::MixSegment segment(dict_path, model_path);
 
 	ifstream infile;
 	infile.open(doc_offset.c_str());
@@ -34,6 +43,8 @@ void RemoveRepeat::build_document_vec(const CppJieba::MixSegment &segment)
 	inlib.open(pagelib_path.c_str());
 
 	int docid, offset, length;
+	cout << "start" << endl;
+	//读每一篇文档，放入vector中
 	while(infile >> docid >> offset >> length)
 	{
 		cout << "-----------------" << endl;
@@ -46,9 +57,9 @@ void RemoveRepeat::build_document_vec(const CppJieba::MixSegment &segment)
 		buffer[length] = '\0';
 
 		Document doc;
-		doc.doc_id = docid;
-		doc.length = strlen(buffer);
-		doc.content = string(buffer);
+		doc._doc_id = docid;	//文档id
+		doc._length = strlen(buffer);	//文档长度
+		doc._content = string(buffer);  //文档内容
 
 		doc.build_word_queue(buffer, segment);
 
@@ -59,23 +70,26 @@ void RemoveRepeat::build_document_vec(const CppJieba::MixSegment &segment)
 	inlib.close();
 }
 
+//去除重复的文档
 void RemoveRepeat::remove_repeat_page()
 {
 	int del_num = 0;
 	for(vector<Document>::size_type ix = 0; ix != _doc_vec.size() - 1; ++ix)
 	{
 		cout << "_doc_vec[ix] : " << ix << endl;
-		if(_doc_vec[ix].del_tag == true)
+		//如果已经删除就跳过
+		if(_doc_vec[ix]._del_tag == true)
 		{
 			continue;
 		}
 		for(vector<Document>::size_type iy = ix + 1; iy != _doc_vec.size(); ++iy)
 		{
-			if(_doc_vec[ix].del_tag == true)
+			//已经删除就跳过
+			if(_doc_vec[ix]._del_tag == true)
 			{
 				break;	//break to up level(for ix);
 			}
-			if(_doc_vec[iy].del_tag == true)
+			if(_doc_vec[iy]._del_tag == true)
 			{
 				continue;
 			}
@@ -84,8 +98,8 @@ void RemoveRepeat::remove_repeat_page()
 				cout << "ix : " << ix << " iy : " << iy << endl;
 				cout << "-------------------" << endl;
 			#endif
-			//remove same page ix & ix + 1
-			if(_doc_vec[ix] == _doc_vec[iy])	//if two document is equal
+			//remove same page ix & iy
+			if(_doc_vec[ix] == _doc_vec[iy])	//如果两个文档相同则删除
 			{
 			#ifndef NDEBUG
 				cout << "-------------------" << endl;
@@ -94,7 +108,7 @@ void RemoveRepeat::remove_repeat_page()
 			#endif
 				del_num ++;
 				//删除长度短的
-				if(_doc_vec[ix].length > _doc_vec[iy].length)
+				if(_doc_vec[ix]._length > _doc_vec[iy]._length)
 				{
 					_doc_vec[iy].set_del_status();
 				}
@@ -123,24 +137,25 @@ void RemoveRepeat::write_to_file()
 
 	outfile.open(delduplicate_lib.c_str());
 	ofs.open(new_offset.c_str());
-	int offset;
-	int length;
 	int docid = 1;
 	//write to  delduplicate_lib
 	for(vector<Document>::size_type ix = 0; ix != _doc_vec.size(); ++ix)
 	{
-		//if del_tag is false
-		if(!_doc_vec[ix].del_tag)
+		//如果没有删除，就写入文件中
+		if(!_doc_vec[ix]._del_tag)
 		{
 			//rewrite docid;
-			size_t pos = _doc_vec[ix].content.find("<docid>");
-			size_t pos1 = _doc_vec[ix].content.find("</docid>");
+			size_t pos = _doc_vec[ix]._content.find("<docid>");
+			size_t pos1 = _doc_vec[ix]._content.find("</docid>");
 			size_t len = strlen("<docid>");
-			_doc_vec[ix].content.replace(pos + len, pos1 - pos - len, to_string(docid));
-			offset = outfile.tellp();
-			outfile << _doc_vec[ix].content << endl;
+			//把docid换成新的，方便查询
+			_doc_vec[ix]._content.replace(pos + len, pos1 - pos - len, to_string(docid));
+			
+			//计算偏移量和文档长度
+			int offset = outfile.tellp();
+			outfile << _doc_vec[ix]._content << endl;
 			int offset1 = outfile.tellp();
-			length = offset1 - offset;
+			int length = offset1 - offset;
 
 			ofs << docid << "\t" << offset << "\t" << length << endl;
 			docid ++; 

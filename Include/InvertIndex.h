@@ -4,7 +4,9 @@
 	> Mail:huweiqing915@gmail.com 
 	> Created Time: 2014年05月18日 星期日 22时09分34秒
  ************************************************************************/
-
+/*
+ *  根据去重后的网页库建立倒排索引,以及归一化后的（词：（文档id，权重））索引
+ */
 #ifndef INVERT_INDEX_H_
 #define INVERT_INDEX_H_
 
@@ -25,9 +27,10 @@ class InvertIndex {
 public:
 	InvertIndex();
 	~InvertIndex();
-	void build_invert_index(const CppJieba::MixSegment &);
-	void count_word_weight();
-	void write_word_weight();
+
+	void build_invert_index();	//建立倒排索引表
+	void count_word_weight();	//计算词的权重
+	void write_word_weight();	//写入文件中	
 	void write_index();
 private:
 	//word : <docid : frequency>

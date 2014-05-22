@@ -1,11 +1,11 @@
 /*************************************************************************
-	> File Name: test_offset.cpp
+	> File Name: test_pagesegment.cpp
 	> Author: huwq
 	> Mail:huweiqing915@gmail.com 
-	> Created Time: 2014年05月16日 星期五 10时38分58秒
+	> Created Time: 2014年05月21日 星期三 21时48分44秒
  ************************************************************************/
 
-//测试offset.lib文件
+//测试offset.lib文件，测试PageSegment类
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -15,8 +15,8 @@
 #include <ostream>
 #include <stdio.h>
 
-#include "EncodingConverter.h"	
 #include "Config.h"
+#include "PageSegment.h"
 
 using namespace std;
 
@@ -26,13 +26,19 @@ int main()
 	Config *p = Config::get_instance();
 	string doc_offset;
 	string pagelib_path;
+	string dict_path;
+	string model_path;
 	//读取需要的文件
-	p->get_file_name("new_offset", doc_offset);
-	p->get_file_name("delduplicate_lib", pagelib_path);
+	p->get_file_name("doc_offset", doc_offset);
+	p->get_file_name("pagelib_path", pagelib_path);
+	p->get_file_name("dict_path", dict_path);
+	p->get_file_name("model_path", model_path);
 	ifstream infile;
 	infile.open(doc_offset.c_str());
 	ifstream inlib;
 	inlib.open(pagelib_path.c_str());
+
+	CppJieba::MixSegment segment(dict_path, model_path);
 
 	string line;
 	while(getline(infile, line))
@@ -52,23 +58,24 @@ int main()
 		cout << "----------------" << endl;
 		cout << docid << "\t" << offset << "\t" << length << endl;
 		cout << "------------------" << endl;
-		//根据offset和length取出文档
+
 		inlib.seekg(offset);
 		char *buffer = new char[length + 1];
 		inlib.read(buffer, length);
 		buffer[length] = '\0';
 
-	#ifndef NDEBUG
-		ofstream outfile;
-		outfile.open("a.txt");
-		outfile << buffer << endl;
-		outfile.close();
-		outfile.clear();
-	#endif	
-		//test file offset
-		// EncodingConverter trans;
-		// string content = trans.gbk_to_utf8(buffer);
-		cout << buffer << endl;
+		//for test PageSegment
+
+		PageSegment ps;
+		ps.build_word_queue(buffer, segment);
+
+		vector<string> word;
+		word = ps.get_word_vector();
+		//output
+		for(auto & x : word)
+		{
+			cout << x << endl;
+		}
 
 		delete [] buffer;
 		buffer = NULL;

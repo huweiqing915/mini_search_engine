@@ -21,13 +21,6 @@ PageSegment::~PageSegment()
 
 }
 
-// inline void PageSegment::init_path(string &dict_path, string &model_path)
-// {
-// 	Config *p = Config::get_instance();
-// 	p->get_file_name("dict_path", dict_path);
-// 	p->get_file_name("model_path", model_path);
-// }
-
 void PageSegment::build_word_queue(char *web_page, const CppJieba::MixSegment &segment)
 {
 	vector<string> words;

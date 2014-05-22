@@ -37,6 +37,7 @@ Config* Config::get_instance()
 	return _p_config;
 }
 
+//去空格
 static inline bool split(string &src, string &key, string &value,  char pattern)
 {
 	if(src.empty())
@@ -50,7 +51,7 @@ static inline bool split(string &src, string &key, string &value,  char pattern)
 	}
 	pos = src.find_first_of(pattern, 0);
 	key = src.substr(0, pos);
-	value = src.substr(pos+1, src.size());
+	value = src.substr(pos + 1, src.size());
 	return true;
 }
 
@@ -69,6 +70,7 @@ bool Config::load_config_file()
 	{
 		lineno ++;
 		string key, value;
+		//如果是空行，就跳过
 		if(line.size() == 0)
 		{
 			continue;

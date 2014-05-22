@@ -5,10 +5,6 @@
 	> Created Time: 2014年05月16日 星期五 23时37分07秒
  ************************************************************************/
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include "Config.h"
 #include "DelDuplicate.h"
 
 using namespace std;

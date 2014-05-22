@@ -18,7 +18,7 @@ void Log::Logging(size_t level, const string &msg, const char *fileName, int lin
 	FILE *fp;
 	char buf[CSTR_BUFFER_SIZE];
 	string log_path;
-	Config *p_log = Config::get_instance();	//通过Config的指针获得日志文件system.log的路径
+	Config *p_log = Config::get_instance();	//通过Config的指针获得日志文件SE.log的路径
 	p_log->get_file_name("log_path", log_path);
 	if((fp = fopen(log_path.c_str(), "a+")) == NULL )
 	{
@@ -32,7 +32,6 @@ void Log::Logging(size_t level, const string &msg, const char *fileName, int lin
 	fprintf(fp, LOG_FORMAT, buf, fileName, lineno, LOG_LEVEL_ARRAY[level], msg.c_str());
 	fclose(fp);
 }
-
 
 void Log::LoggingF(size_t level, const char *fileName, int lineno, const string &format, ...)
 {

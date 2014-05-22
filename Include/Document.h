@@ -16,8 +16,8 @@
 
 #include "MixSegment.hpp"
 
-#define TOPK 10
-#define SIM_MIN_NUM 8
+#define TOPK 15  //取出现次数排名前15的词
+#define SIM_MIN_NUM 10	//相似度阈值
 
 struct PageWord {
 	std::string _word;
@@ -39,24 +39,24 @@ class Document {
 public:
 	Document();
 	~Document();
-	void build_word_queue(char *web_page, const CppJieba::MixSegment &);
-	void set_del_status();
-	std::vector<std::string>& get_word_vector();
 
-	bool operator==(Document &other);
-	bool operator!= (Document &other);
+	void build_word_queue(char *web_page, const CppJieba::MixSegment &); //建立优先级队列
+	void set_del_status();	//设置删除标记
+	std::vector<std::string>& get_word_vector(); //取存放topk的vector
 
-	int doc_id;
-	int length;
-	std::string content;
-	bool del_tag;
+	bool operator==(Document &other);  //重载==运算符，用来比较两篇文档是否相似
+	bool operator!=(Document &other);
+
+	int _doc_id;	//文档id
+	int _length;	//文档长
+	std::string _content; //文档内容
+	bool _del_tag;  //标记是否删除，true则表示已经删除
 
 private:
-	std::priority_queue<PageWord, std::vector<PageWord>, compare> _word_queue;
-	std::set<std::string> _exclude;
-	std::vector<std::string> _top_k;
-	int count_same_element(Document &other);
-	void put_topk_to_vector();
+	std::vector<std::string> _top_k;  //用来存放结果的vector
+	int count_same_element(Document &other); //计算相同元素个数
+	//把优先级队列中前几的词放入vector中
+	void put_topk_to_vector(std::priority_queue<PageWord, std::vector<PageWord>, compare>&);	
 };
 
 #endif

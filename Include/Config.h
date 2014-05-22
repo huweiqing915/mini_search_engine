@@ -31,7 +31,8 @@ public:
 private:
 	Config();	//将构造函数声明为私有，无法在外部构造对象
 	virtual ~Config();
-	static Config *_p_config; //上面的static函数只能调用static变量
+
+	static Config *_p_config; //上面的static get_instance函数只能调用这个static变量
 	static MutexLock _lock;	//DCLP双重锁
 
 	bool load_config_file();	//读取配置文件的内容

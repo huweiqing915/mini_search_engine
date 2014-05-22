@@ -15,11 +15,12 @@ public:
 	RemoveRepeat();
 	~RemoveRepeat();
 
-	void build_document_vec(const CppJieba::MixSegment &);
-	void remove_repeat_page();
-	void write_to_file();
+	void build_document_vec(); //把所有文档存入vector
+	void remove_repeat_page();  //去除重复文档
+	void write_to_file();	//将去重后的写入新的ripepage库
 private:
-	std::vector<Document> _doc_vec;
+	//所有文档都放在这个vector中，每个文档存有词频前几个的词
+	std::vector<Document> _doc_vec; 
 };
 
 #endif

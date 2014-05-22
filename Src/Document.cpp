@@ -11,7 +11,7 @@
 
 using namespace std;
 
-Document::Document():del_tag(false)
+Document::Document():_del_tag(false)
 {
 
 }
@@ -20,13 +20,6 @@ Document::~Document()
 {
 
 }
-
-// inline void Document::init_path(string &dict_path, string &model_path)
-// {
-// 	Config *p = Config::get_instance();
-// 	p->get_file_name("dict_path", dict_path);
-// 	p->get_file_name("model_path", model_path);
-// }
 
 void Document::build_word_queue(char *web_page, const CppJieba::MixSegment &segment)
 {
@@ -37,38 +30,39 @@ void Document::build_word_queue(char *web_page, const CppJieba::MixSegment &segm
 	ExcludeSet *p_exclude = ExcludeSet::get_instance();
 	set<string> exclude = p_exclude->get_exclude_set();
 
-	//build word_map
+	//优先级队列，用来存储文档中的词
+	priority_queue<PageWord, vector<PageWord>, compare> word_queue;
+
 	map<string, int> word_map; //存放词语-词频的map
 	for(vector<string>::iterator iter = words.begin(); iter != words.end(); ++iter)
 	{
-		//if not in the exclude
+		//去停用词
 		if(!exclude.count(*iter))
 		{
 			word_map[*iter] ++;
 		}
 	}
 
-	//words are in the map, then put it into priority_queue
-	for(map<string, int>::iterator map_iter = word_map.begin(); 
-		map_iter != word_map.end(); ++map_iter)
+	//把word_map中的单词放进优先级队列中
+	for(map<string, int>::iterator map_iter = word_map.begin(); map_iter != word_map.end(); ++map_iter)
 	{
-		_word_queue.push(PageWord(map_iter->first, map_iter->second));
+		word_queue.push(PageWord(map_iter->first, map_iter->second));
 	}
-	//put queue to vector
-	put_topk_to_vector();
+	//把优先级队列中前15个数放入vector中
+	put_topk_to_vector(word_queue);
 }
 
-void Document::put_topk_to_vector()
+void Document::put_topk_to_vector(priority_queue<PageWord, vector<PageWord>, compare> &word_queue)
 {
 	int num = 0;
 	while(num != TOPK)
 	{
-		if(_word_queue.empty())	//if is empty
+		if(word_queue.empty())	//如果队列为空就结束
 		{
 			break;
 		}
-		string word = _word_queue.top()._word;
-		_word_queue.pop();
+		string word = word_queue.top()._word;	
+		word_queue.pop();
 		if(word[0] & 0x80)	//is GBK
 		{
 			_top_k.push_back(word);
@@ -77,11 +71,12 @@ void Document::put_topk_to_vector()
 	}
 }
 
-std::vector<std::string>& Document::get_word_vector()
+vector<string>& Document::get_word_vector()
 {
 	return _top_k;
 }
 
+//计算相同元素个数
 int Document::count_same_element(Document &other)
 {
 	vector<string> vec;
@@ -130,6 +125,6 @@ bool Document::operator!= (Document &other)
 
 void Document::set_del_status()
 {
-	del_tag = true;
+	_del_tag = true;
 }
 
