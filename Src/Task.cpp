@@ -12,7 +12,10 @@ using namespace std;
 void Task::excute_task()
 {
 	string jsonstr = json_string();
-	send(_client_fd, jsonstr.c_str(), jsonstr.size(), 0);
+	int send_size = send(_client_fd, jsonstr.c_str(), jsonstr.size(), 0);
+	{
+		cout << "send_size: " << send_size << endl; 
+	}
 }
 
 //将string转换成json格式
@@ -29,8 +32,8 @@ string Task::json_string()
 		// strcpy(summary, x.second.c_str());
 		// sprintf(title, "%s", title);
 		// sprintf(summary, "sum\n%s", summary);
-		elem["title"] = x.first;
-		elem["summary"] = x.second;
+		elem["title"] = x._title;
+		elem["summary"] = x._content;
 		arr.append(elem);
 	}
 	root["files"] = arr;

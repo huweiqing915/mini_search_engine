@@ -30,9 +30,9 @@ int main()
 
     //初始化切词工具
     CppJieba::MixSegment segment(dict_path, model_path);
-
+    cout << "Overload segment done !" << endl;
     Search search;
-    vector<pair<string, string> > result_vec;
+    vector<Document> result_vec;
 
     TCPSocket server(ip, port); //从配置文件读取ip和port
     server.tcp_server_init();   //初始化server--create socket(),bind(),listen(),setnonblock()
@@ -48,7 +48,7 @@ int main()
     int listenfd = server.get_fd();
     ev.data.fd = listenfd;
     //设置要处理的事件类型，当描述符可读时触发，触发方式为ET模式
-    ev.events = EPOLLIN | EPOLLET;
+    ev.events = EPOLLIN | EPOLLLT;
     //注册epoll事件
     epoll_ctl(epollfd, EPOLL_CTL_ADD, listenfd, &ev);
 
@@ -68,13 +68,13 @@ int main()
             if (events[ix].data.fd == listenfd)
             {
                 int new_fd = server.tcp_accept();
-                server.set_non_blocking(new_fd);	//设置为非阻塞方式
-                ev.events = EPOLLIN | EPOLLET;
+                // server.set_non_blocking(new_fd);	//设置为非阻塞方式
+                ev.events = EPOLLIN | EPOLLLT;
                 //设置用于读操作的文件描述符
                 ev.data.fd = new_fd;
                 //设置用于注册的读操作事件
                 //EPOLLIN ：表示对应的文件描述符可以读,ET模型
-                ev.events = EPOLLIN | EPOLLET;	
+                ev.events = EPOLLIN | EPOLLLT;	
                 //注册ev，每次有新的客户端的连接到服务器，都需要为其生成一个事件
 				epoll_ctl(epollfd, EPOLL_CTL_ADD, new_fd, &ev);
             }
@@ -98,7 +98,7 @@ int main()
                 }
 
                 ev.data.fd = sockfd;
-                ev.events = EPOLLOUT | EPOLLET;
+                ev.events = EPOLLOUT | EPOLLLT;
                 epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, &ev);
             }
             else if (events[ix].events & EPOLLOUT) // 如果有数据发送
@@ -114,7 +114,7 @@ int main()
                 result_vec.clear();
                 ev.data.fd = sockfd;
                 //写完后，这个sockfd准备读
-                ev.events = EPOLLIN | EPOLLET;
+                ev.events = EPOLLIN | EPOLLLT;
                 epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, &ev);
             }
         }

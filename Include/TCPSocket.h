@@ -27,6 +27,7 @@
 #include "Log.h"
 
 #define MAX_CONNECT_NUM 5 //服务器允许连接的最大数
+#define BUF_SIZE 8*1024*1024
 
 class TCPSocket {
 public:

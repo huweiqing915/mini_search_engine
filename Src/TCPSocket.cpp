@@ -32,6 +32,24 @@ void TCPSocket::tcp_server_init()
 		LogFatal("Server create socket failed!");
 		throw runtime_error("Server create socket failed!");
 	}
+	//setsockopt
+	int reuse = 1 ;
+	int buf_num = BUF_SIZE;
+	if(0 != setsockopt(_sock_fd, SOL_SOCKET, SO_REUSEADDR,  (void*)&reuse, sizeof(int)) )
+	{
+		close(_sock_fd);
+		throw runtime_error("setsockopt reuseaddr failed!");
+	}
+	if(0 != setsockopt(_sock_fd, SOL_SOCKET, SO_SNDBUF,  (void*)&buf_num, sizeof(int)) )
+	{
+		close(_sock_fd);
+		throw runtime_error("setsockopt sendbuf failed!");
+	}
+	if(0 != setsockopt(_sock_fd, SOL_SOCKET, SO_RCVBUF,  (void*)&buf_num, sizeof(int)) )
+	{
+		close(_sock_fd);
+		throw runtime_error("setsockopt recvbuf failed!");
+	}
 	//bind
 	if(bind(_sock_fd, (struct sockaddr*)&_server_addr, sizeof(_server_addr)) == -1)
 	{
@@ -48,7 +66,7 @@ void TCPSocket::tcp_server_init()
 		throw runtime_error("Server listen error!");
 	}
 	//set non block
-	set_non_blocking(_sock_fd);
+	//set_non_blocking(_sock_fd);
 
 	cout << "Server Initialization Done..." << endl;
 	LogInfo("Server initialization done!");

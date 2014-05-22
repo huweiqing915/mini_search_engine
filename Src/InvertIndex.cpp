@@ -64,7 +64,7 @@ void InvertIndex::build_invert_index()
 		size_t pos_end = doc.find("</content>");
 		size_t len = strlen("<content>");
 		//取出标签content中的内容
-		doc = doc.substr(pos_begin + len, (pos_end - pos_begin) - len);
+		doc = doc.substr(pos_begin + len, pos_end-(pos_begin + len));
 
 		vector<string> words;
 		segment.cut(doc, words);
@@ -75,7 +75,10 @@ void InvertIndex::build_invert_index()
 			//去停用词, invert_inde:存放词语:(docid,词频)的map
 			if(!exclude.count(*iter))
 			{
-				++((_invert_index[*iter])[docid]);
+				if(((*iter)[0] & 0x80) || isascii((*iter)[0]))  //如果是gbk码或者ascii码就放进去
+				{
+					++((_invert_index[*iter])[docid]);
+				}
 			}
 		}
 	}
@@ -94,8 +97,8 @@ void InvertIndex::count_word_weight()
 			//y.first:docid, y.second:tf;
 			//w = tf*log(N/df + 0.05)
 			float weight = y.second * log((_docment_num/df) + 0.05);
-			//_doc_word : map<docid, map<keyword, float> >
-			(_doc_word[y.first])[x.first] = weight;
+			//_docid_word : map<docid, map<keyword, float> >
+			(_docid_word[y.first])[x.first] = weight;
 		}
 	}
 	_invert_index.clear();
@@ -129,13 +132,15 @@ void InvertIndex::write_word_weight()
 	ofstream outfile;
 	outfile.open(word_weight.c_str());
 
-	for(auto & x : _doc_word)
+	for(auto & x : _docid_word)
 	{
 		float sum = 0.0;
 		//x.first : docid, x.second:<word, weight>
 		//每一篇文章，归一化
+	#ifndef NDEBUG
 		cout << "-------doc size--------" << endl;
 		cout << x.second.size() << endl;
+	#endif
 		for(auto & ix : x.second)
 		{
 			//wi的平方和,ix: map<word,weight>
@@ -144,6 +149,7 @@ void InvertIndex::write_word_weight()
 		for(auto & iy : x.second)
 		{
 			//iy.second:weight,归一化结果放入新的map中去
+			//_word_weight:<keyword, <docid, weight> >
 			float normalize_weight = iy.second / sqrt(sum);
 			(_word_weight[iy.first])[x.first] = normalize_weight;
 		}
